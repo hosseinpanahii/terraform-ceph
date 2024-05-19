@@ -1,0 +1,53 @@
+---
+- name: Prepare ceph nodes
+  hosts: all
+  become: yes
+  become_method: sudo
+  vars:
+    ceph_admin_user: ubuntu
+  tasks:
+    - name: Set timezone
+      timezone:
+        name: Asia/Tehran
+    - name: Remove lib/dpkg/lock-frontend
+      shell: |
+        rm /var/lib/dpkg/lock
+        rm /var/lib/apt/lists/lock
+        rm /var/lib/dpkg/lock-frontend
+        rm /var/cache/apt/archives/lock
+        apt -y purge unattended-upgrades
+    - name: Install required system packages
+      apt:
+        name: [vim,git,bash-completion,lsb-release,wget,chrony,lvm2]
+        state: latest
+        update_cache: true
+      register: apt_get_status    
+      until: apt_get_status is success
+      retries: 60
+      delay: 10
+    - name: Iinstall Docker
+      shell: |
+        apt install -qq -y  docker.io
+    - name: Add user to Docker group
+      user:
+        name: ubuntu # Please use another user, not root :-)
+        append: yes
+        groups: docker
+    - name: add mirror docker registry
+      blockinfile:
+        path: /etc/docker/daemon.json
+        block: |
+          {
+             "registry-mirrors": ["https://docker.iranserver.com"]
+          }
+        create: true
+    - name: remove comment before and after registry inorder to restart docker service
+      shell: |
+        sed -i '/^#/d' /etc/docker/daemon.json
+      notify:
+        - restart docker
+  handlers:
+    - name: restart docker
+      service:
+        name: docker
+        state: restarted

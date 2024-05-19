@@ -1,0 +1,45 @@
+#cloud-config
+users:
+  - name: cephadmin
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "$6$UzZ8o/uNzBnGax2e$YbO2o17pHvUuDy/lJFgUsAtLdQFCBn5zMagEAnuq8YbRKGid6nZXwhkTnTk3k/8CRmTr7PKOOPXG8sHVhKWkc0"
+  - name: ubuntu
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    passwd: "$6$sNSrBd.mK0pZC4Fd$wLZ3Ylm.GOa3ovXNboU6SJKnF9SgvioKYhQO2QDekP9aFq.IV8l9q1N0h2uzb0erHUkb9EbDhbGuXM13OnbKc/"
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDZA4L6smlcnjoQFUJnZa0GxPJn4n+8n3oppb2GzBEVZvtbtMO7Weby0GrhaygU35szUMKRFVavxmLCQfr4kO2kPafeAv0NOC4uF4luXNKW/Wj7vHjGrObowWbRSTAuAz21PPgslFKPd/bCaWNBxrOj/vg8F/tPz7JMU7Im8hVS1BLD4JSRZ1/BUoGOJ0cgPX1qkLZh+2T05IR/28uEgIGre0NwHYSl34mFm8OOJ+uabcXhdZuEdiM53vBrhwzJcas+9FNV0FxUIKs02HWvKRExrklokuzed6CjjVrZGQhCyEkE2DN3MfMUq9J91OH9at/vcXX59LHD0dwl4NgxldoCI7VPg8/yeyVYaWES4o0HefGuD5Wm0qAcpJ1ogp6PrEvAfzWsaxRyBTdZjSUME+D3+fB14+zc2nflXU8v4eLT0bE4x89a1P7ppPKMVmFT95004YZ5cD1ImLtNX9wxY8zO7B0zZ/PiQ4y/pI8ErObBicGzEa1gYHDhuUn5Pysvqlk= root@terraform-mohammad
+chpasswd:
+  expire: ${flag}
+  users:
+    - name: root
+      password: "$6$UzZ8o/uNzBnGax2e$YbO2o17pHvUuDy/lJFgUsAtLdQFCBn5zMagEAnuq8YbRKGid6nZXwhkTnTk3k/8CRmTr7PKOOPXG8sHVhKWkc0"
+write_files:
+- path: /etc/sysctl.d/60-disable-ipv6.conf
+  content: |
+    net.ipv6.conf.all.disable_ipv6=1
+    net.ipv6.conf.default.disable_ipv6=1
+  owner: root
+- path: /etc/hosts
+  content: |
+    127.0.0.1 localhost
+    # Ceph nodes
+    10.10.69.90 te-moh-ceph-mon-0
+    10.10.69.91 te-moh-ceph-mon-1
+    10.10.69.92 te-moh-ceph-mon-2
+    10.10.69.93 te-moh-ceph-osd-0
+    10.10.69.94 te-moh-ceph-osd-1
+    10.10.69.95 te-moh-ceph-osd-2
+runcmd:
+  - rm -rf /etc/netplan/00-installer-config.yaml
+  - netplan --debug apply
+  - sysctl -w net.ipv6.conf.all.disable_ipv6=1
+  - sysctl -w net.ipv6.conf.default.disable_ipv6=1
+  - sed -i '/PermitRootLogin/d' /etc/ssh/sshd_config
+  - echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+  - systemctl restart ssh

@@ -1,0 +1,14 @@
+---
+- name: Install ceph 
+  hosts: manager
+  become: yes
+  become_method: sudo
+  tasks: 
+    - name: Deploy Ceph Storage Cluster
+      shell: |
+        mkdir -p /etc/ceph
+        cephadm bootstrap --mon-ip "{{ node_ip }}" --initial-dashboard-user admin --initial-dashboard-password P@ssw0rd
+        cephadm add-repo --release reef
+        cephadm install ceph-common
+        ceph -v
+

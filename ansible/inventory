@@ -1,0 +1,9 @@
+[ceph_mons]
+te-moh-ceph-mon-1
+te-moh-ceph-mon-2
+[ceph_osds]
+te-moh-ceph-osd-0
+te-moh-ceph-osd-1
+te-moh-ceph-osd-2
+[manager]
+te-moh-ceph-mon-0
